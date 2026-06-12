@@ -1,5 +1,5 @@
 #!name=Sunlogin AdBlock
-#!desc=Safe Sunlogin/Oray ad cleanup based on iOS capture. Avoids remote-control session APIs.
+#!desc=Safe Sunlogin/Oray ad cleanup based on iOS capture. Blocks material campaign hosts and avoids remote-control session APIs.
 #!author=Codex
 #!homepage=https://github.com/White-Lie-88896/loon-plugins
 
@@ -10,6 +10,11 @@ DOMAIN-SUFFIX,ads.oray.com,REJECT
 DOMAIN-SUFFIX,advert.oray.com,REJECT
 DOMAIN-KEYWORD,orayad,REJECT
 DOMAIN-KEYWORD,sunlogin-ad,REJECT
+
+# Oray material campaign host. Capture shows this host is used for UI campaigns,
+# including device-page top text, middle image banners, startup, remote-end,
+# waiting-page, and discovery flow materials. Remote sessions use api-std instead.
+DOMAIN,client-api-v2.oray.com,REJECT
 
 # Third-party ad SDKs observed in Sunlogin iOS capture.
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
@@ -23,6 +28,7 @@ DOMAIN,sdk.e.qq.com,REJECT
 DOMAIN,mi.gdt.qq.com,REJECT
 
 # Oray campaign images observed in the device-page middle banner.
+DOMAIN,upload-cdn.orayimg.com,REJECT
 URL-REGEX,^https:\/\/upload-cdn\.orayimg\.com\/upload\/activity\/,REJECT
 
 [Script]
@@ -39,4 +45,4 @@ http-response ^https?:\/\/[^\/]*(?:oray|sunlogin|xiangrikui)[^\/]*\/.*(?:ad|ads|
 
 [MITM]
 # Keep MITM narrow. Add exact hosts only after capture confirms they carry ads.
-hostname = ad.oray.com, ads.oray.com, advert.oray.com, client-api-v2.oray.com, slapi.oray.net, upload-cdn.orayimg.com
+hostname = ad.oray.com, ads.oray.com, advert.oray.com, slapi.oray.net
