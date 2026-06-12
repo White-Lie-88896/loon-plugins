@@ -21,4 +21,12 @@ Files:
 - `sunlogin/sunlogin-adblock.plugin`
 - `sunlogin/sunlogin-ad-cleaner.js`
 - `sunlogin/install.html`
+- `tools/test-sunlogin-cleaner.js`
+- `tools/analyze-har.js`
 
+Local testing:
+
+```text
+node tools/test-sunlogin-cleaner.js response.json
+node tools/analyze-har.js capture.har
+```

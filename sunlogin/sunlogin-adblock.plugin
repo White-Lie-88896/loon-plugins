@@ -1,33 +1,21 @@
 #!name=Sunlogin AdBlock
-#!desc=Remove Sunlogin/Oray ads: splash, popup, device-page banner, discover content, and telemetry. No membership or paid-feature unlock.
+#!desc=Safe Sunlogin/Oray ad cleanup. Avoids device, host, client, and remote-control session APIs.
 #!author=Codex
 #!homepage=https://github.com/White-Lie-88896/loon-plugins
 
 [Rule]
-# Oray / Sunlogin likely ad and telemetry endpoints.
+# Keep this list conservative. Remote-control apps may depend on log/stat/session hosts.
 DOMAIN-SUFFIX,ad.oray.com,REJECT
 DOMAIN-SUFFIX,ads.oray.com,REJECT
 DOMAIN-SUFFIX,advert.oray.com,REJECT
-DOMAIN-SUFFIX,stat.oray.com,REJECT
-DOMAIN-SUFFIX,stats.oray.com,REJECT
-DOMAIN-SUFFIX,track.oray.com,REJECT
-DOMAIN-SUFFIX,tracker.oray.com,REJECT
-DOMAIN-SUFFIX,log.oray.com,REJECT
-DOMAIN-SUFFIX,logs.oray.com,REJECT
 DOMAIN-KEYWORD,orayad,REJECT
 DOMAIN-KEYWORD,sunlogin-ad,REJECT
 
 [Script]
-# Config / launch / splash / popup / banner / promotion / notice / navigation responses.
-http-response ^https?:\/\/[^\/]*(?:oray|sunlogin|xiangrikui)[^\/]*\/.*(?:ad|ads|advert|splash|popup|banner|promotion|activity|launch|startup|config|notice|message|recommend|marketing|announce|announcement|marquee|carousel|swiper|navigation|navbar|tab|tabs|discover|find|news|article|strategy|guide) script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-ad-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Ad Cleaner
-
-# Device/home/feed style APIs sometimes carry mixed normal content and ads.
-http-response ^https?:\/\/[^\/]*(?:oray|sunlogin|xiangrikui)[^\/]*\/.*(?:device|devices|host|hosts|computer|computers|client|clients|terminal|terminals) script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-ad-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Device Banner Cleaner
-
-# Home/feed style APIs sometimes carry mixed normal content and ads.
-http-response ^https?:\/\/[^\/]*(?:oray|sunlogin|xiangrikui)[^\/]*\/.*(?:home|feed|index|discover|operation|operate) script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-ad-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Feed Cleaner
+# Only touch URLs that clearly look like ads or operational notices.
+# Do not match device, host, client, terminal, session, login, auth, connect, relay, tunnel, or control APIs.
+http-response ^https?:\/\/[^\/]*(?:oray|sunlogin|xiangrikui)[^\/]*\/.*(?:ad|ads|advert|splash|popup|banner|promotion|launch|startup|marketing|marquee|carousel|swiper) script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-ad-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Safe Ad Cleaner
 
 [MITM]
-# If the app fails to open, log in, or connect after enabling this plugin,
-# remove broad hostnames here and keep only the exact ad/config hosts found in Loon capture.
-hostname = *.oray.com, *.oray.net, *.sunlogin.com, *.sunlogin.oray.com, *.orayimg.com
+# Keep MITM narrow. Add exact hosts only after capture confirms they carry ads.
+hostname = ad.oray.com, ads.oray.com, advert.oray.com

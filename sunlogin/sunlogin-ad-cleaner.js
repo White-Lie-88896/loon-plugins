@@ -1,7 +1,8 @@
 /*
-Sunlogin / Oray ad response cleaner for Loon.
-Purpose: remove splash, popup, banner, device-page notice, discover content, and feed ad objects.
-It intentionally does not modify membership, subscription, license, or account fields.
+Sunlogin / Oray safe ad response cleaner for Loon.
+Purpose: remove obvious splash, popup, banner, promotion, and notice payloads.
+It intentionally avoids device, session, membership, subscription, license, account,
+remote-control, relay, tunnel, login, and auth fields.
 */
 
 let body = $response.body || "";
@@ -19,39 +20,18 @@ const dropKeys = new Set([
   "advertise",
   "advertisement",
   "advertisements",
-  "announcement",
-  "announcements",
-  "announce",
-  "announces",
-  "article",
-  "articles",
-  "articlelist",
-  "activity",
-  "activities",
-  "activitylist",
   "banner",
   "banners",
   "bannerad",
   "bannerads",
   "bannerlist",
-  "broadcast",
-  "broadcasts",
   "carousel",
   "carousels",
-  "discover",
-  "discoverpage",
-  "discovery",
   "displayad",
   "displayads",
-  "feedad",
-  "feedads",
-  "find",
-  "findpage",
   "floatad",
   "floatads",
   "floatingad",
-  "guide",
-  "guides",
   "insertad",
   "interstitialad",
   "launchad",
@@ -60,19 +40,11 @@ const dropKeys = new Set([
   "marketingads",
   "marquee",
   "marquees",
-  "messagead",
-  "messageads",
-  "news",
-  "newslist",
   "notice",
   "noticebar",
   "notices",
   "openscreenad",
   "openad",
-  "operationad",
-  "operationads",
-  "operatead",
-  "operateads",
   "popupad",
   "popupads",
   "popad",
@@ -83,30 +55,21 @@ const dropKeys = new Set([
   "promotions",
   "promotionad",
   "promotionads",
-  "recommend",
-  "recommends",
-  "recommendad",
-  "recommendads",
-  "recommendlist",
   "rollnotice",
   "rollingnotice",
   "splashad",
   "splashads",
   "startad",
-  "strategy",
-  "strategies",
-  "swiper",
-  "swipers",
   "startupad",
   "startupads",
+  "swiper",
+  "swipers",
   "topad",
   "topads"
 ]);
 
-const adValue = /^(ad|ads|advert|advertise|advertisement|article|banner|banner_ad|carousel|discover|discovery|feed_ad|find|guide|insert_ad|interstitial|marketing|marquee|news|notice|open_ad|open_screen_ad|popup_ad|pop_ad|promo|promotion|recommend|recommend_ad|splash|splash_ad|start_ad|startup_ad|strategy|swiper)$/i;
-const adText = /(\u5e7f\u544a|\u63a8\u5e7f|\u5f00\u5c4f|\u5f39\u7a97|\u8fd0\u8425\u4f4d|\u8425\u9500|\u6d3b\u52a8\u5165\u53e3|618|\u8d85\u7ea7\u4f1a\u5458|\u66f4\u9ad8\u5e27\u7387|\u66f4\u4f4e\u5ef6\u8fdf|\u4f1a\u5fc3\u653b\u7565|\u6700\u65b0\u63a8\u8350)/;
-const discoverText = /^(\u53d1\u73b0|discover|discovery|find)$/i;
-const discoverRoute = /(discover|discovery|find|article|news|strategy|recommend|promotion|activity)/i;
+const adValue = /^(ad|ads|advert|advertise|advertisement|banner|banner_ad|carousel|display_ad|float_ad|insert_ad|interstitial|launch_ad|marketing|marquee|notice|open_ad|open_screen_ad|popup_ad|pop_ad|promo|promotion|splash|splash_ad|start_ad|startup_ad|swiper)$/i;
+const adText = /(\u5e7f\u544a|\u63a8\u5e7f|\u5f00\u5c4f|\u5f39\u7a97|\u8fd0\u8425\u4f4d|\u8425\u9500|\u6d3b\u52a8\u5165\u53e3|618|\u8d85\u7ea7\u4f1a\u5458|\u66f4\u9ad8\u5e27\u7387|\u66f4\u4f4e\u5ef6\u8fdf)/;
 
 function normalizeKey(key) {
   return String(key).replace(/[\s_\-.]/g, "").toLowerCase();
@@ -149,9 +112,7 @@ function looksLikeAdItem(value) {
     "scene",
     "slot",
     "material_type",
-    "materialType",
-    "page_type",
-    "pageType"
+    "materialType"
   ];
 
   for (const key of typeKeys) {
@@ -161,34 +122,13 @@ function looksLikeAdItem(value) {
     }
   }
 
-  const nameKeys = ["name", "title", "desc", "description", "label"];
-  for (const key of nameKeys) {
+  const textKeys = ["name", "title", "desc", "description", "label", "content", "text"];
+  for (const key of textKeys) {
     const current = value[key];
     if (typeof current === "string" && adText.test(current)) return true;
-    if (typeof current === "string" && discoverText.test(current.trim())) return true;
   }
 
-  const routeKeys = [
-    "url",
-    "uri",
-    "link",
-    "route",
-    "path",
-    "page",
-    "scheme",
-    "target",
-    "deeplink",
-    "deepLink",
-    "jump_url",
-    "jumpUrl"
-  ];
-
-  for (const key of routeKeys) {
-    const current = value[key];
-    if (typeof current === "string" && discoverRoute.test(current)) return true;
-  }
-
-  return Object.keys(value).some(shouldDropKey);
+  return false;
 }
 
 function clean(value, depth) {
@@ -226,12 +166,7 @@ function parseJsonLike(text) {
 
 try {
   const parsed = parseJsonLike(body);
-  let cleaned = clean(parsed.value, 0);
-
-  if (looksLikeAdItem(cleaned)) {
-    cleaned = Array.isArray(cleaned) ? [] : {};
-  }
-
+  const cleaned = clean(parsed.value, 0);
   body = parsed.callback
     ? `${parsed.callback}(${JSON.stringify(cleaned)});`
     : JSON.stringify(cleaned);
