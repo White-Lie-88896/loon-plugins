@@ -1,0 +1,31 @@
+#!name=Sunlogin AdBlock
+#!desc=Remove Sunlogin/Oray ads: splash, popup, banner, promotion, and telemetry. No membership or paid-feature unlock.
+#!author=Codex
+#!homepage=https://github.com/White-Lie-88896/loon-plugins
+
+[Rule]
+# Oray / Sunlogin likely ad and telemetry endpoints.
+DOMAIN-SUFFIX,ad.oray.com,REJECT
+DOMAIN-SUFFIX,ads.oray.com,REJECT
+DOMAIN-SUFFIX,advert.oray.com,REJECT
+DOMAIN-SUFFIX,stat.oray.com,REJECT
+DOMAIN-SUFFIX,stats.oray.com,REJECT
+DOMAIN-SUFFIX,track.oray.com,REJECT
+DOMAIN-SUFFIX,tracker.oray.com,REJECT
+DOMAIN-SUFFIX,log.oray.com,REJECT
+DOMAIN-SUFFIX,logs.oray.com,REJECT
+DOMAIN-KEYWORD,orayad,REJECT
+DOMAIN-KEYWORD,sunlogin-ad,REJECT
+
+[Script]
+# Config / launch / splash / popup / banner / promotion responses.
+http-response ^https?:\/\/[^\/]*(?:oray|sunlogin|xiangrikui)[^\/]*\/.*(?:ad|ads|advert|splash|popup|banner|promotion|activity|launch|startup|config|notice|message|recommend|marketing) script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-ad-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Ad Cleaner
+
+# Home/feed style APIs sometimes carry mixed normal content and ads.
+http-response ^https?:\/\/[^\/]*(?:oray|sunlogin|xiangrikui)[^\/]*\/.*(?:home|feed|index|discover|operation|operate) script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-ad-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Feed Cleaner
+
+[MITM]
+# If the app fails to open, log in, or connect after enabling this plugin,
+# remove broad hostnames here and keep only the exact ad/config hosts found in Loon capture.
+hostname = *.oray.com, *.oray.net, *.sunlogin.com, *.sunlogin.oray.com, *.orayimg.com
+
