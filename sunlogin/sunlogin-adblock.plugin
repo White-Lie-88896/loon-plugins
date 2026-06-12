@@ -1,5 +1,5 @@
 #!name=Sunlogin AdBlock
-#!desc=Safe Sunlogin/Oray ad cleanup. Avoids device, host, client, and remote-control session APIs.
+#!desc=Safe Sunlogin/Oray ad cleanup based on iOS capture. Avoids remote-control session APIs.
 #!author=Codex
 #!homepage=https://github.com/White-Lie-88896/loon-plugins
 
@@ -11,11 +11,29 @@ DOMAIN-SUFFIX,advert.oray.com,REJECT
 DOMAIN-KEYWORD,orayad,REJECT
 DOMAIN-KEYWORD,sunlogin-ad,REJECT
 
+# Third-party ad SDKs observed in Sunlogin iOS capture.
+DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
+DOMAIN-SUFFIX,pangolin-sdk-toutiao1.com,REJECT
+DOMAIN,adservice.sigmob.com,REJECT
+DOMAIN,dc.sigmob.cn,REJECT
+DOMAIN-SUFFIX,1rtb.net,REJECT
+DOMAIN-SUFFIX,1rtb.com,REJECT
+DOMAIN-SUFFIX,1rtb.cn,REJECT
+DOMAIN,sdk.e.qq.com,REJECT
+DOMAIN,mi.gdt.qq.com,REJECT
+
 [Script]
+# Oray material APIs carry device-page banner, startup, remote-end, waiting-page,
+# and discovery flow campaigns. These are UI campaigns, not remote-control session data.
+http-response ^https:\/\/client-api-v2\.oray\.com\/materials\/(?:SLCC_|SUNLOGIN_CLIENT_IOS_) script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-oray-ui-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Oray Materials Cleaner
+
+# Discovery page article list.
+http-response ^https:\/\/slapi\.oray\.net\/message\/usercases script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-oray-ui-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Discovery Cleaner
+
 # Only touch URLs that clearly look like ads or operational notices.
 # Do not match device, host, client, terminal, session, login, auth, connect, relay, tunnel, or control APIs.
 http-response ^https?:\/\/[^\/]*(?:oray|sunlogin|xiangrikui)[^\/]*\/.*(?:ad|ads|advert|splash|popup|banner|promotion|launch|startup|marketing|marquee|carousel|swiper) script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-ad-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Safe Ad Cleaner
 
 [MITM]
 # Keep MITM narrow. Add exact hosts only after capture confirms they carry ads.
-hostname = ad.oray.com, ads.oray.com, advert.oray.com
+hostname = ad.oray.com, ads.oray.com, advert.oray.com, client-api-v2.oray.com, slapi.oray.net
