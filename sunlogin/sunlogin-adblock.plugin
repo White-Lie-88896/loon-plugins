@@ -1,5 +1,5 @@
 #!name=Sunlogin AdBlock
-#!desc=Safe Sunlogin/Oray ad cleanup based on iOS capture. Blocks material campaign hosts and avoids remote-control session APIs.
+#!desc=Safe Sunlogin/Oray ad cleanup based on iOS capture. Soft-empties ad configs and avoids remote-control session APIs.
 #!author=Codex
 #!homepage=https://github.com/White-Lie-88896/loon-plugins
 
@@ -10,11 +10,6 @@ DOMAIN-SUFFIX,ads.oray.com,REJECT
 DOMAIN-SUFFIX,advert.oray.com,REJECT
 DOMAIN-KEYWORD,orayad,REJECT
 DOMAIN-KEYWORD,sunlogin-ad,REJECT
-
-# Oray material campaign host. Capture shows this host is used for UI campaigns,
-# including device-page top text, middle image banners, startup, remote-end,
-# waiting-page, and discovery flow materials. Remote sessions use api-std instead.
-DOMAIN,client-api-v2.oray.com,REJECT
 
 # Third-party ad SDKs observed in Sunlogin iOS capture.
 DOMAIN-SUFFIX,pangolin-sdk-toutiao.com,REJECT
@@ -27,11 +22,11 @@ DOMAIN-SUFFIX,1rtb.cn,REJECT
 DOMAIN,sdk.e.qq.com,REJECT
 DOMAIN,mi.gdt.qq.com,REJECT
 
-# Oray campaign images observed in the device-page middle banner.
-DOMAIN,upload-cdn.orayimg.com,REJECT
-URL-REGEX,^https:\/\/upload-cdn\.orayimg\.com\/upload\/activity\/,REJECT
-
 [Script]
+# Ad frequency config. Return a valid config with all ad slots disabled so the
+# app does not treat it as a network failure and switch to fallback ads.
+http-response ^https:\/\/api-std\.sunlogin\.oray\.com\/advertisement\/frequency script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-oray-ui-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Ad Frequency Cleaner
+
 # Oray material APIs carry device-page banner, startup, remote-end, waiting-page,
 # and discovery flow campaigns. These are UI campaigns, not remote-control session data.
 http-response ^https:\/\/client-api-v2\.oray\.com\/materials\/ script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-oray-ui-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Oray Materials Cleaner
@@ -39,10 +34,13 @@ http-response ^https:\/\/client-api-v2\.oray\.com\/materials\/ script-path=https
 # Discovery page article list.
 http-response ^https:\/\/slapi\.oray\.net\/message\/usercases script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-oray-ui-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Discovery Cleaner
 
+# Experience config can enable full-screen/fallback ad presentation.
+http-response ^https:\/\/slapi\.oray\.net\/experience script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-oray-ui-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Experience Cleaner
+
 # Only touch URLs that clearly look like ads or operational notices.
 # Do not match device, host, client, terminal, session, login, auth, connect, relay, tunnel, or control APIs.
 http-response ^https?:\/\/[^\/]*(?:oray|sunlogin|xiangrikui)[^\/]*\/.*(?:ad|ads|advert|splash|popup|banner|promotion|launch|startup|marketing|marquee|carousel|swiper) script-path=https://raw.githubusercontent.com/White-Lie-88896/loon-plugins/main/sunlogin/sunlogin-ad-cleaner.js, requires-body=true, timeout=10, tag=Sunlogin Safe Ad Cleaner
 
 [MITM]
 # Keep MITM narrow. Add exact hosts only after capture confirms they carry ads.
-hostname = ad.oray.com, ads.oray.com, advert.oray.com, slapi.oray.net
+hostname = ad.oray.com, ads.oray.com, advert.oray.com, api-std.sunlogin.oray.com, client-api-v2.oray.com, slapi.oray.net
